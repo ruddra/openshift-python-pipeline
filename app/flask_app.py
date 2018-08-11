@@ -6,14 +6,12 @@ tasks = [
     {
         'id': 1,
         'title': 'Openshift Jenkins Pipeline Python/Nginx Implementation',
-        'description': 'Find the implementation at https://github.com/ruddra/openshift-python-nginx', 
-        'author': "Arnab Kumar Shil"
+        'description': 'Find the implementation at https://github.com/ruddra/openshift-python-nginx'
     },
     {
         'id': 2,
         'title': 'Openshift Jenkins Pipeline Django Implementation',
-        'description': 'Find the implementation at https://github.com/ruddra/openshift-django', 
-        'author': "Arnab Kumar Shil"
+        'description': 'Find the implementation at https://github.com/ruddra/openshift-django'
     }
 ]
 

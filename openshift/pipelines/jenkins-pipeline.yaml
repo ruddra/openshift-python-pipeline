@@ -24,7 +24,7 @@ spec:
               DEV_PROJECT = "dev"
               STAGE_PROJECT = "stage"
               TEMPLATE_NAME = "python-nginx"
-              ARTIFACT_FOLDER = "/target"
+              ARTIFACT_FOLDER = "target"
               PORT = 8081;
           }
           stages {
