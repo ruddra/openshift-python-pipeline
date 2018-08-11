@@ -1,0 +1,5 @@
+*.pyc
+.vscode
+**/__pycache__/
+*/__pycache__/
+./openshift_django/local_settings.py

@@ -1,0 +1,25 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: od-add-vol
+spec:
+  activeDeadlineSeconds: 400
+  completions: 1
+  parallelism: 1
+  template:
+    spec:
+      containers:
+      - env:
+        command:
+        - /bin/bash
+        - -x
+        - -c
+        - |
+          oc volume dc/openshift-django --mount-path='/data'
+
+        image: openshift/origin:v3.9.0
+        name: od-add-vol
+        resources: {}
+        terminationMessagePath: /dev/termination-log
+        terminationMessagePolicy: File
+      restartPolicy: Never

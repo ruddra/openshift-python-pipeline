@@ -1,0 +1,37 @@
+apiVersion: v1
+kind: Template
+metadata:
+  name: openshift-django
+objects:
+- apiVersion: v1
+  kind: BuildConfig
+  metadata:
+    name: openshift-django
+  spec:
+    output:
+      to:
+        kind: ImageStreamTag
+        name: openshift-django:latest
+    runPolicy: Serial
+    source:
+      git:
+        ref: develop
+        uri: https://github.com/ruddra/openshift-django.git
+      type: Git
+    strategy:
+      dockerStrategy:
+        from:
+          kind: ImageStreamTag
+          name: 'python:3.6'
+          namespace: openshift
+        type: Docker
+
+- apiVersion: v1
+  kind: ImageStream
+  metadata:
+    name: openshift-django
+  spec:
+    lookupPolicy:
+      local: false
+    tags:
+      - name: latest

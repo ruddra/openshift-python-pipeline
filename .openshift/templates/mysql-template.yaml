@@ -1,0 +1,65 @@
+apiVersion: v1
+kind: Template
+metadata:
+  creationTimestamp: null
+  name: mysql-55-centos7
+objects:
+- apiVersion: v1
+  kind: Service
+  metadata:
+    labels:
+      app: mysql-55-centos7
+    name: mysql-55-centos7
+    uid: c21278ce-8bf8-11e8-a514-080027f414e3
+  spec:
+    clusterIP: 172.30.0.30
+    ports:
+      - name: 3306-tcp
+        port: 3306
+        protocol: TCP
+        targetPort: 3306
+    selector:
+      app: mysql-55-centos7
+      deploymentconfig: mysql-55-centos7
+    sessionAffinity: None
+    type: ClusterIP
+  status:
+    loadBalancer: {}
+
+
+- apiVersion: v1
+  kind: DeploymentConfig
+  metadata:
+    name: mysql-55-centos7
+  spec:
+    replicas: 1
+    selector:
+      app: mysql-55-centos7
+      deploymentconfig: mysql-55-centos7
+    strategy:
+      type: Rolling
+    template:
+      metadata:
+        creationTimestamp: null
+        labels:
+          app: mysql-55-centos7
+          deploymentconfig: mysql-55-centos7
+      spec:
+        containers:
+        - env:
+          - name: MYSQL_USER
+            value: myroot
+          - name: MYSQL_PASSWORD
+            value: myroot123
+          - name: MYSQL_DATABASE
+            value: mydjango
+          - name: "MYSQL_MASTER_USER"
+            value: root
+          - name: "MYSQL_MASTER_PASSWORD"
+            value: root123
+          image: openshift/mysql-55-centos7@sha256:7cd33ccc63b8005810aedee0444472cc84c3e3c38fe9cd147edb964e712a1068
+          imagePullPolicy: Always
+          name: mysql-55-centos7
+          ports:
+          - containerPort: 3306
+            protocol: TCP

@@ -1,0 +1,176 @@
+apiVersion: v1
+kind: BuildConfig
+metadata:
+  name: djangopipeline
+  labels:
+    name: djangopipeline
+  annotations:
+    pipeline.alpha.openshift.io/uses: '[{"name": "openshift-django", "namespace": "", "kind": "DeploymentConfig"}]'
+spec:
+  runPolicy: Serial
+  strategy:
+    type: JenkinsPipeline
+    jenkinsPipelineStrategy:
+      jenkinsfile: |-
+        pipeline {
+          agent {
+              node {label 'python'}
+          }
+          environment {
+              APPLICATION_NAME = 'openshift-django'
+              TEMPLATE = "https://raw.githubusercontent.com/ruddra/openshift-django/develop/.openshift/templates/openshift-django-template.yaml"
+              BUILD_TEMPLATE = "https://raw.githubusercontent.com/ruddra/openshift-django/develop/.openshift/templates/openshift-django-build.yaml"
+              GIT_REPO="http://github.com/ruddra/openshift-django.git"
+              GIT_BRANCH="develop"
+              STAGE_TAG = "promoteToQA"
+              DEV_PROJECT = "dev"
+              STAGE_PROJECT = "stage"
+              TEMPLATE_NAME = "openshift-django"
+              ARTIFACT_FOLDER = "target"
+          }
+          stages {
+              stage('Get Latest Code') {
+                  steps {
+                    git branch: "${GIT_BRANCH}", url: "${GIT_REPO}"
+                  }
+              }
+              stage ("Install Dependencies") {
+                steps {
+                  sh """
+                  pip install virtualenv
+                  virtualenv --no-site-packages .
+                  source bin/activate
+                  pip install -r requirements.pip
+                  deactivate
+                  """
+                }
+              }
+              stage('Run Tests') {
+                  steps {
+                    sh '''
+                    source bin/activate
+                    python manage.py test
+                    deactivate
+                    '''
+                    junit "xunittest.xml"
+                  }
+              }
+              stage('Store Artifact'){
+                  steps{
+                      script{
+                        def safeBuildName  = "${APPLICATION_NAME}_${BUILD_NUMBER}",
+                            artifactFolder = "${ARTIFACT_FOLDER}",
+                            fullFileName   = "${safeBuildName}.tar.gz",
+                            applicationZip = "${artifactFolder}/${fullFileName}"
+                            applicationDir = ["./openshift_django",
+                                              "./pictures",
+                                              "./requirements.pip",
+                                              "./manage.py",
+                                              "./Dockerfile"
+                                              ].join(" ");
+                        def needTargetPath = !fileExists("${artifactFolder}")
+                        if (needTargetPath) {
+                            sh "mkdir ${artifactFolder}"
+                        }
+                        sh "tar -czvf ${applicationZip} ${applicationDir}"
+                        archiveArtifacts artifacts: "${applicationZip}", excludes: null, onlyIfSuccessful: true
+                      }
+                  }
+              }
+              stage('Create Image Builder') {
+                  when {
+                      expression {
+                          openshift.withCluster() {
+                          openshift.withProject(DEV_PROJECT) {
+                              echo "checking openshift django exists in DEV"
+                              return !openshift.selector("bc", "${TEMPLATE_NAME}").exists();
+                             }
+                        }
+                    }
+                }
+                steps {
+                    script {
+                        openshift.withCluster() {
+                            openshift.withProject(DEV_PROJECT) {
+                                openshift.newApp(BUILD_TEMPLATE);
+                              }
+                          }
+                      }
+                  }
+              }
+              stage('Build Image') {
+                  steps {
+                      sh "rm -rf oc-build && mkdir -p oc-build/deployments"
+                      sh "cp ${ARTIFACT_FOLDER}/${APPLICATION_NAME}_${BUILD_NUMBER}.tar.gz oc-build/deployments/ROOT.tar.gz"
+                  
+                      script {
+                          openshift.withCluster() {
+                          openshift.withProject(env.DEV_PROJECT) {
+                              openshift.selector("bc", "$TEMPLATE_NAME").startBuild("--from-archive=oc-build/deployments/ROOT.tar.gz", "--wait=true")
+                              }
+                          }
+                      }
+                  }
+              }
+              stage('Rollout to DEV') {
+                  when {
+                      expression {
+                        openshift.withCluster() {
+                          openshift.withProject(env.DEV_PROJECT) {
+                            return !openshift.selector('dc', "${TEMPLATE_NAME}").exists()
+                            }
+                        }
+                    }
+                }
+                steps {
+                    script {
+                        openshift.withCluster() {
+                            openshift.withProject(env.DEV_PROJECT) {
+                                def app = openshift.newApp("${TEMPLATE_NAME}:latest")
+                                app.narrow("svc").expose();
+                                def dc = openshift.selector("dc", "${TEMPLATE_NAME}")
+                                while (dc.object().spec.replicas != dc.object().status.availableReplicas) {
+                                    sleep 10
+                                  }
+                              }
+                          }
+                      }
+                  }
+              }
+              stage('Promote to STAGE?') {
+                  steps {
+                      timeout(time:15, unit:'MINUTES') {
+                           input message: "Promote to STAGE?", ok: "Promote"
+                      }
+                      script {
+                          openshift.withCluster() {
+                          openshift.tag("${DEV_PROJECT}/${TEMPLATE_NAME}:latest", "${STAGE_PROJECT}/${TEMPLATE_NAME}:${STAGE_TAG}")
+                            }
+                        }
+                   }
+              }
+              stage('Rollout to STAGE') {
+                  steps {
+                      script {
+                            openshift.withCluster() {
+                              openshift.withProject(STAGE_PROJECT) {
+                                  if (openshift.selector('dc', '${TEMPLATE_NAME}').exists()) {
+                                      openshift.selector('dc', '${TEMPLATE_NAME}').delete()
+                                      openshift.selector('svc', '${TEMPLATE_NAME}').delete()
+                                       openshift.selector('route', '${TEMPLATE_NAME}').delete()
+                                }
+                            openshift.newApp("${TEMPLATE_NAME}:${STAGE_TAG}").narrow("svc").expose()
+                            }
+                         }
+                      } 
+                  }
+              }
+              stage('Scale in STAGE') {
+                  steps {
+                      script {
+                          openshiftScale(namespace: "${STAGE_PROJECT}", deploymentConfig: "${TEMPLATE_NAME}", replicaCount: '3')
+                        }
+                    }
+                }
+            }
+        }
