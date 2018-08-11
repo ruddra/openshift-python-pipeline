@@ -1,9 +1,9 @@
 apiVersion: v1
 kind: BuildConfig
 metadata:
-  name: python-pipeline
+  name: python-nginx-pipeline
   labels:
-    name: python-pipeline
+    name: python-nginx-pipeline
   annotations:
     pipeline.alpha.openshift.io/uses: '[{"name": "python-pipeline", "namespace": "", "kind": "DeploymentConfig"}]'
 spec:
@@ -24,7 +24,7 @@ spec:
               DEV_PROJECT = "dev"
               STAGE_PROJECT = "stage"
               TEMPLATE_NAME = "python-nginx"
-              ARTIFACT_FOLDER = "target"
+              ARTIFACT_FOLDER = "/target"
               PORT = 8081;
           }
           stages {
@@ -88,7 +88,7 @@ spec:
                     script {
                         openshift.withCluster() {
                             openshift.withProject(DEV_PROJECT) {
-                                openshift.newBuild("--name=tasks", "--docker-image=docker.io/nginx:mainline-alpine", "--binary=true")
+                                openshift.newBuild("--name=${TEMPLATE_NAME}", "--docker-image=docker.io/nginx:mainline-alpine", "--binary=true")
                               }
                           }
                       }
