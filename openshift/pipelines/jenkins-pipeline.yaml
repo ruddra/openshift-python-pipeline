@@ -1,11 +1,11 @@
 apiVersion: v1
 kind: BuildConfig
 metadata:
-  name: djangopipeline
+  name: python-pipeline
   labels:
-    name: djangopipeline
+    name: python-pipeline
   annotations:
-    pipeline.alpha.openshift.io/uses: '[{"name": "openshift-django", "namespace": "", "kind": "DeploymentConfig"}]'
+    pipeline.alpha.openshift.io/uses: '[{"name": "python-pipeline", "namespace": "", "kind": "DeploymentConfig"}]'
 spec:
   runPolicy: Serial
   strategy:
@@ -17,16 +17,15 @@ spec:
               node {label 'python'}
           }
           environment {
-              APPLICATION_NAME = 'openshift-django'
-              TEMPLATE = "https://raw.githubusercontent.com/ruddra/openshift-django/develop/.openshift/templates/openshift-django-template.yaml"
-              BUILD_TEMPLATE = "https://raw.githubusercontent.com/ruddra/openshift-django/develop/.openshift/templates/openshift-django-build.yaml"
-              GIT_REPO="http://github.com/ruddra/openshift-django.git"
-              GIT_BRANCH="develop"
+              APPLICATION_NAME = 'python-nginx'
+              GIT_REPO="http://github.com/ruddra/openshift-python-nginx.git"
+              GIT_BRANCH="master"
               STAGE_TAG = "promoteToQA"
               DEV_PROJECT = "dev"
               STAGE_PROJECT = "stage"
-              TEMPLATE_NAME = "openshift-django"
+              TEMPLATE_NAME = "python-nginx"
               ARTIFACT_FOLDER = "target"
+              PORT = 8081;
           }
           stages {
               stage('Get Latest Code') {
@@ -40,7 +39,7 @@ spec:
                   pip install virtualenv
                   virtualenv --no-site-packages .
                   source bin/activate
-                  pip install -r requirements.pip
+                  pip install -r app/requirements.pip
                   deactivate
                   """
                 }
@@ -49,10 +48,10 @@ spec:
                   steps {
                     sh '''
                     source bin/activate
-                    python manage.py test
+                    nosetests app --with-xunit
                     deactivate
                     '''
-                    junit "xunittest.xml"
+                    junit "nosetests.xml"
                   }
               }
               stage('Store Artifact'){
@@ -62,11 +61,9 @@ spec:
                             artifactFolder = "${ARTIFACT_FOLDER}",
                             fullFileName   = "${safeBuildName}.tar.gz",
                             applicationZip = "${artifactFolder}/${fullFileName}"
-                            applicationDir = ["./openshift_django",
-                                              "./pictures",
-                                              "./requirements.pip",
-                                              "./manage.py",
-                                              "./Dockerfile"
+                            applicationDir = ["app",
+                                              "config",
+                                              "Dockerfile",
                                               ].join(" ");
                         def needTargetPath = !fileExists("${artifactFolder}")
                         if (needTargetPath) {
@@ -82,7 +79,6 @@ spec:
                       expression {
                           openshift.withCluster() {
                           openshift.withProject(DEV_PROJECT) {
-                              echo "checking openshift django exists in DEV"
                               return !openshift.selector("bc", "${TEMPLATE_NAME}").exists();
                              }
                         }
@@ -92,7 +88,7 @@ spec:
                     script {
                         openshift.withCluster() {
                             openshift.withProject(DEV_PROJECT) {
-                                openshift.newApp(BUILD_TEMPLATE);
+                                openshift.newBuild("--name=tasks", "--docker-image=docker.io/nginx:mainline-alpine", "--binary=true")
                               }
                           }
                       }
@@ -100,13 +96,10 @@ spec:
               }
               stage('Build Image') {
                   steps {
-                      sh "rm -rf oc-build && mkdir -p oc-build/deployments"
-                      sh "cp ${ARTIFACT_FOLDER}/${APPLICATION_NAME}_${BUILD_NUMBER}.tar.gz oc-build/deployments/ROOT.tar.gz"
-                  
                       script {
                           openshift.withCluster() {
                           openshift.withProject(env.DEV_PROJECT) {
-                              openshift.selector("bc", "$TEMPLATE_NAME").startBuild("--from-archive=oc-build/deployments/ROOT.tar.gz", "--wait=true")
+                              openshift.selector("bc", "$TEMPLATE_NAME").startBuild("--from-archive=${ARTIFACT_FOLDER}/${APPLICATION_NAME}_${BUILD_NUMBER}.tar.gz", "--wait=true")
                               }
                           }
                       }
@@ -127,7 +120,7 @@ spec:
                         openshift.withCluster() {
                             openshift.withProject(env.DEV_PROJECT) {
                                 def app = openshift.newApp("${TEMPLATE_NAME}:latest")
-                                app.narrow("svc").expose();
+                                app.narrow("svc").expose("--port=${PORT}");
                                 def dc = openshift.selector("dc", "${TEMPLATE_NAME}")
                                 while (dc.object().spec.replicas != dc.object().status.availableReplicas) {
                                     sleep 10
@@ -159,7 +152,7 @@ spec:
                                       openshift.selector('svc', '${TEMPLATE_NAME}').delete()
                                        openshift.selector('route', '${TEMPLATE_NAME}').delete()
                                 }
-                            openshift.newApp("${TEMPLATE_NAME}:${STAGE_TAG}").narrow("svc").expose()
+                            openshift.newApp("${TEMPLATE_NAME}:${STAGE_TAG}").narrow("svc").expose("--port=${PORT}")
                             }
                          }
                       } 
