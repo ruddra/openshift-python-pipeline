@@ -11,5 +11,5 @@ spec:
             uri: https://github.com/ruddra/openshift-python-nginx.git
     strategy:
         jenkinsPipelineStrategy:
-            jenkinsfilePath: Jenkinsfile
-        type: openshift/pipelines/JenkinsPipeline
+            jenkinsfilePath: openshift/pipelines/Jenkinsfile
+        type: JenkinsPipeline
