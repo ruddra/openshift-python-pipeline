@@ -1,9 +1,7 @@
-# Deploy Django in Openshift
-A working example for deploying django application using openshift 3.
+# Deploy Python+Gunicorn+NGINX+Jenkins Pipeline to Openshift
+A working example for three part blog series of Modern CI/CD using Python+Gunicorn+NGINX+Jenkins Pipelines to Openshift. They are available at:
+1. [Modern CI/CD Using Python+Gunicorn+NGINX+Jenkins Pipeline to Openshift (Part One)](https://ruddra.com/2018/08/11/openshift-python-gunicorn-nginx-jenkins-pipelines-part-one)
+2. [Modern CI/CD Using Python+Gunicorn+NGINX+Jenkins Pipeline to Openshift (Part Two)](https://ruddra.com/2018/08/12/openshift-python-gunicorn-nginx-jenkins-pipelines-part-two)
+3. [Modern CI/CD Using Python+Gunicorn+NGINX+Jenkins Pipeline to Openshift (Part Three)](https://ruddra.com/2018/08/12/openshift-python-gunicorn-nginx-jenkins-pipelines-part-three)
 
-
-Here you can deploy this application using with or without pipelines. Please read this artical for deploying without openshift
-http://ruddra.com/2018/02/24/deploy-django-to-openshift-3/
-
-You can use pipeline to deploy this app. Please read here for more detials:
-
+Please read these blogs before using this repo.
