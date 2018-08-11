@@ -13,3 +13,13 @@ spec:
         jenkinsPipelineStrategy:
             jenkinsfilePath: openshift/pipelines/Jenkinsfile
         type: JenkinsPipeline
+    triggers:
+        - github:
+            secret: secret
+          type: GitHub
+        - generic:
+            secret: secret
+          type: Generic
+        - bitbucket:
+            secret: secret
+          type: Bitbucket
