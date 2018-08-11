@@ -12,4 +12,4 @@ spec:
     strategy:
         jenkinsPipelineStrategy:
             jenkinsfilePath: Jenkinsfile
-        type: JenkinsPipeline
+        type: openshift/pipelines/JenkinsPipeline
