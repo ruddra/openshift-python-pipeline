@@ -14,5 +14,6 @@ Pipeline execution will look like this in blue ocean of Jenkins:
 Tests are stored in blue ocean as well:
 ![Tests](https://ruddra.com/content/images/2018/08/Screen-Shot-2018-08-12-at-3.29.31-AM.png)
 
+## Output Server
 Python Nginx Server will be available:
 ![Server](https://ruddra.com/content/images/2018/08/Screen-Shot-2018-08-12-at-12.00.08-PM.png)
