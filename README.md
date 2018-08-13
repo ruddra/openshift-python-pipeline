@@ -5,7 +5,7 @@ A working example for three part blog series of Modern CI/CD using Python+Gunico
 3. [Modern CI/CD Using Python+Gunicorn+NGINX+Jenkins Pipeline to Openshift (Part Three)](https://ruddra.com/2018/08/12/openshift-python-gunicorn-nginx-jenkins-pipelines-part-three)
 
 ## Application Architecture
-The python application will be served by Gunicorn and NGINX will reverse proxy that to expose to real world
+The python app will be served by Gunicorn and NGINX will reverse proxy that, to expose the app to real world.
 ![Application](https://ruddra.com/content/images/2018/08/Screen-Shot-2018-08-12-at-3.32.20-PM.png)
 
 ## Deployment Structure
