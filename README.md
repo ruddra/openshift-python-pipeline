@@ -4,7 +4,8 @@ A working example for three part blog series of Modern CI/CD using Python+Gunico
 2. [Modern CI/CD Using Python+Gunicorn+NGINX+Jenkins Pipeline to Openshift (Part Two)](https://ruddra.com/2018/08/12/openshift-python-gunicorn-nginx-jenkins-pipelines-part-two)
 3. [Modern CI/CD Using Python+Gunicorn+NGINX+Jenkins Pipeline to Openshift (Part Three)](https://ruddra.com/2018/08/12/openshift-python-gunicorn-nginx-jenkins-pipelines-part-three)
 
-### [Application Architecture](https://github.com/ruddra/openshift-python-nginx-pipeline-ci-cd/wiki/Application-Architecture)
-### [Deployment Structure](https://github.com/ruddra/openshift-python-nginx-pipeline-ci-cd/wiki/Deployment-Structure)
-### [Pipeline](https://github.com/ruddra/openshift-python-nginx-pipeline-ci-cd/wiki/Pipeline)
-### [Output Server](https://github.com/ruddra/openshift-python-nginx-pipeline-ci-cd/wiki/Output-Server)
+## Wiki:
+1. [Application Architecture](https://github.com/ruddra/openshift-python-nginx-pipeline-ci-cd/wiki/Application-Architecture)
+2. [Deployment Structure](https://github.com/ruddra/openshift-python-nginx-pipeline-ci-cd/wiki/Deployment-Structure)
+3. [Pipeline](https://github.com/ruddra/openshift-python-nginx-pipeline-ci-cd/wiki/Pipeline)
+4. [Output Server](https://github.com/ruddra/openshift-python-nginx-pipeline-ci-cd/wiki/Output-Server)
